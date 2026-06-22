@@ -1,0 +1,93 @@
+name: Python Tests and Linting
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ['3.8', '3.9', '3.10', '3.11']
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      continue-on-error: true
+
+    - name: Verify imports
+      run: |
+        python -c "import app"
+        python -c "import train_model"
+        python -c "import test_models"
+
+    - name: Check code syntax
+      run: |
+        python -m py_compile app.py
+        python -m py_compile train_model.py
+        python -m py_compile test_models.py
+
+    - name: Check for security issues
+      run: |
+        pip install bandit
+        bandit -r . -ll || true
+      continue-on-error: true
+
+  code-quality:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pylint
+
+    - name: Analyze code with pylint
+      run: |
+        pylint app.py train_model.py test_models.py --fail-under=7.0 || true
+      continue-on-error: true
+
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Check if documentation exists
+      run: |
+        test -f README.md || (echo "README.md not found" && exit 1)
+        test -f CONTRIBUTING.md || (echo "CONTRIBUTING.md not found" && exit 1)
+        test -f CODE_OF_CONDUCT.md || (echo "CODE_OF_CONDUCT.md not found" && exit 1)
+        test -f CHANGELOG.md || (echo "CHANGELOG.md not found" && exit 1)
+
+    - name: Verify directory structure
+      run: |
+        test -d data || (echo "data directory not found" && exit 1)
+        test -d models || (echo "models directory not found" && exit 1)

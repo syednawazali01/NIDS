@@ -1,0 +1,46 @@
+# Development and Testing Dependencies
+# Install with: pip install -r requirements-dev.txt
+
+# Base requirements
+-r requirements.txt
+
+# Testing
+pytest>=6.0
+pytest-cov>=2.12
+pytest-mock>=3.6
+
+# Code Quality and Linting
+flake8>=3.9
+flake8-docstrings>=1.6
+flake8-bugbear>=21.0
+pylint>=2.10
+black>=21.0
+isort>=5.9
+
+# Type Checking
+mypy>=0.950
+types-all>=0.1
+
+# Security
+bandit>=1.7
+pip-audit>=1.0
+
+# Documentation
+sphinx>=4.0
+sphinx-rtd-theme>=1.0
+
+# Pre-commit hooks
+pre-commit>=2.13
+
+# Development Tools
+ipython>=7.0
+jupyter>=1.0
+ipdb>=0.13
+
+# Performance Profiling
+memory-profiler>=0.59
+line-profiler>=3.3
+
+# Release management
+bumpversion>=0.6
+twine>=3.4

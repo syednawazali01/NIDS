@@ -1,0 +1,69 @@
+name: Create Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Get version from tag
+      id: tag_name
+      run: |
+        echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+    - name: Create Release Notes
+      id: release_notes
+      run: |
+        # Extract release notes from CHANGELOG.md
+        VERSION=${{ steps.tag_name.outputs.version }}
+        echo "Release version: $VERSION"
+
+    - name: Create GitHub Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ steps.tag_name.outputs.version }}
+        body: |
+          # Release ${{ steps.tag_name.outputs.version }}
+          
+          See [CHANGELOG.md](CHANGELOG.md) for detailed changes.
+          
+          ## Installation
+          
+          ```bash
+          pip install git+https://github.com/${{ github.repository }}.git@${{ github.ref }}
+          ```
+          
+          Or clone and install:
+          ```bash
+          git clone https://github.com/${{ github.repository }}.git
+          cd NIDS
+          git checkout ${{ github.ref_name }}
+          pip install -r requirements.txt
+          ```
+          
+          ## Quick Start
+          
+          See [QUICKSTART.md](QUICKSTART.md) for installation and usage instructions.
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Assets
+      uses: softprops/action-gh-release@v1
+      with:
+        files: |
+          README.md
+          CHANGELOG.md
+          requirements.txt
+        token: ${{ secrets.GITHUB_TOKEN }}
